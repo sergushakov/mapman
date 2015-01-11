@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Map manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="vendor/leaflet/leaflet.css" rel="stylesheet" />
+    <link href="vendor/leaflet.minimap/Control.MiniMap.css" />
+    <link href="app/style.css" rel="stylesheet" />
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?sensor=false&key=AIzaSyAGo33r6UECbDAJV63G20ULh6RtyzKBkXc&libraries=places"></script>
+
+    <!--[if lte IE 8]>
+        <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.5.1/leaflet.ie.css" />
+    <![endif]-->
+
+  </head>
+  <body>
+      <div id="gmap"></div>
+      <div id="nav">
+          <input id="search" type="text" placeholder="Поиск" />
+      </div>
+      <div id="layersToggler" data-bind= "css:{closer:menu},click:toggleMenu">
+          <img src="app/tiles.svg" />
+      </div>
+      <div id="layers" class="hidden" data-bind="css:{hidden:!menu()}">              
+          <div class="layerGroup">
+              <div class="layerGroupHead">Слои карты</div>
+              <!--  ko foreach: baseL-->
+              <div class="layer">
+                  <input type="checkbox" data-bind="checked:active,attr:{id:providername}">
+                  <label data-bind="text:title,attr:{for:providername}">добрый вечер</label>
+              </div>
+              <!-- /ko -->
+          </div>
+          <div class="layerGroup" data-bind="visible:!isWikiEmbed()">
+              <div class="layerGroupHead">Wikimapia</div>
+              <!--  ko foreach: overlayL -->
+              <div class="layer">
+                  <input type="checkbox" data-bind="checked:active,attr:{id:providername}" name="layers" />
+                  <label data-bind="text:title,attr:{for:providername}">добрый вечер</label>
+              </div>
+              <!-- /ko -->
+          </div>
+      </div>
+      
+      <div id="map"></div>
+      <img id="locator" src="app/me.svg" data-bind="click:getLocation" style="cursor:pointer" />
+
+      <script src="vendor/knockout/knockout-3.2.0.js"></script>
+      <script src="vendor/date.format/date.format.js"></script>
+      <script src="vendor/jquery/jquery.min.js"></script>
+      <script src="vendor/leaflet/leaflet-src.js"></script>
+      <script src="vendor/leaflet.proj4/proj4-compressed.js"></script>
+      <script src="vendor/leaflet.proj4/proj4leaflet.js"></script>
+      <script src="vendor/leaflet.label/leaflet.label-src.js"></script>
+      <script src="vendor/leaflet.minimap/Control.MiniMap.js"></script>
+      <script src="vendor/geoman.all.min.js"></script>
+      <script src="app/main.js"></script>
+  </body>
+</html>
