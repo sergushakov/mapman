@@ -50,14 +50,14 @@ function Application(p){
             me.zoom(me.map.getZoom());
         });
 
-        $("#nav").show();
-        $('#search').on('keydown', function(e) {
-            c = e.which ? e.which : e.keyCode;
-            if (c == 13 ) {
-                e.preventDefault();
-                me.geoManager.geocode({providername: me.provider(), query:$('#search').val()});
-            }
+        // google places autocomplete
+
+        me.autocomplete = new google.maps.places.Autocomplete($("#search")[0]);
+        google.maps.event.addListener(me.autocomplete, 'place_changed', function() {
+            me.geoManager.geocode({providername: me.provider(), query:$('#search').val()});
         });
+        
+        $("#nav").show();
     };
     me.updateMinimap = function(l){
         if (l.type !== "layer") return false;
