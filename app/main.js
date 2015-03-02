@@ -11,10 +11,18 @@ function Application(p){
         var mlng = str.match(",([0-9.]+)");
         return [mlat && mlat.length > 1 ? parseFloat(mlat[1]) : 41.73891,mlng && mlng.length > 0 ? parseFloat(mlng[1]) : 44.82697];
     };
+    me.getSet = function(){
+        var str = window.location.search;
+        var set = str.match("m=([a-zA-Z]+)");
+        return set && set.length > 1 ? set[1] : "";
+        
+    };
     me.zoom = ko.observable(me.getZoom());
     me.center = ko.observable(me.getCenter());
+    me.activeSet = ko.observable(me.getSet()||p.activeSet);    
+
     me.url = ko.pureComputed(function(){
-        return ["?z=",me.zoom(),"&l=",Number(me.center()[0]).toFixed(5),",",Number(me.center()[1]).toFixed(5)].join("");
+        return ["?z=",me.zoom(),"&m=",me.activeSet(),"&l=",Number(me.center()[0]).toFixed(5),",",Number(me.center()[1]).toFixed(5)].join("");
     });
     me.url.subscribe(function(url){
         window.history.pushState(window.history.state,"",url);
@@ -63,6 +71,7 @@ function Application(p){
         if (l.type !== "layer") return false;
         var provider = me.geoManager._getFunctionByName(l.providername);
         var lprom = provider({providername:l.providername,title:l.title,map:me.map});
+        me.activeSet(l.id);
         $.when(lprom).done(function(layer){
             console.log(layer);
             if (me.minimap !== null){
@@ -115,7 +124,7 @@ function Application(p){
             });
         } else { alert("Geolocation is not supported by this browser.");}
     };
-    me.initializeMap();
+    me.initializeMap(p);
     me.interactiveL = me.bindLayers(p.interactiveL,"object");
     me.baseL = []; // fix me for a greatest good
     me.overlayL = []; // fix me for a greatest good
@@ -123,6 +132,14 @@ function Application(p){
     me.baseL = me.bindLayers(p.baseL,"layer");
     me.overlayL = me.bindLayers(p.overlayL,"overlay");
     me.menu = ko.observable(p.menu||false);
+
+    if (me.activeSet() && me.activeSet() !== ''){
+        me.baseL.forEach(function(l){
+            if (l.id === me.activeSet()){
+                l.active(true);
+            }
+        });
+    }
     
     return me;
 
@@ -130,6 +147,7 @@ function Application(p){
 
 function MapLayer(p){
     var me = this;
+    me.id = p.id;
     me.lid = null;
     me.parent = p.parent;
     me.providername = p.providername;
@@ -146,34 +164,35 @@ function MapLayer(p){
             me.parent.removeLayer(me);
         }                 
     });
-    if (p.active){
-        setTimeout(function(){me.active(true);},100);
-    }
+    // if (p.active){
+    //     setTimeout(function(){me.active(true);},100);
+    // }
     // me.active(p.active||false);
     return me;
 
 }
 
 ko.applyBindings(new Application({interactiveL:[],
-                                  baseL:[{providername:"L.GeoManager.GoogleRoadmap",title:"Google Карта",active:true,overlays:[{providername:"L.GeoManager.GoogleIdentify", title:"Google"}]},
-                                         {providername:"L.GeoManager.GoogleSatellite",title:"Google Спутник",overlays:[{providername:"L.GeoManager.GoogleIdentify", title:"Google"}]},
-                                         {providername:"L.GeoManager.GoogleHybrid",title:"Google Гибрид",overlays:[{providername:"L.GeoManager.GoogleIdentify", title:"Google"}]},
+                                  baseL:[{id:"googleRoadmap",providername:"L.GeoManager.GoogleRoadmap",title:"Google Карта",active:true,overlays:[{providername:"L.GeoManager.GoogleIdentify", title:"Google"}]},
+                                         {id:"googleSatellite",providername:"L.GeoManager.GoogleSatellite",title:"Google Спутник",overlays:[{providername:"L.GeoManager.GoogleIdentify", title:"Google"}]},
+                                         {id:"googleHybrid",providername:"L.GeoManager.GoogleHybrid",title:"Google Гибрид",overlays:[{providername:"L.GeoManager.GoogleIdentify", title:"Google"}]},
                                          // {providername:"L.GeoManager.GoogleTerrain",title:"Google Поверхность"},
-                                         {providername:"L.GeoManager.OSM",title:"OpenStreetMap",overlays:[{providername:"L.GeoManager.OSMIdentify", title:"OpenStreetMap"}]},
-                                         {providername:"L.GeoManager.OpenCycleMapTransport",title:"OpenStreetMap Транспорт",overlays:[{providername:"L.GeoManager.OSMIdentify", title:"OpenStreetMap"}]},
-                                         {providername:"L.GeoManager.YandexPublicMap",title:"Яндекс Народная карта",overlays:[{providername:"L.GeoManager.YandexIdentify", title:"Яндекс"}]},
-                                         {providername:"L.GeoManager.YandexMap",title:"Яндекс Карта",overlays:[{providername:"L.GeoManager.YandexIdentify", title:"Яндекс"}]},
-                                         {providername:"L.GeoManager.YandexSatellite",title:"Яндекс Спутник",overlays:[{providername:"L.GeoManager.YandexIdentify", title:"Яндекс"}]},
-                                         {providername:"L.GeoManager.BingRoad",title:"Bing",overlays:[{providername:"L.GeoManager.BingIdentify",title:"Bing"}]},
-                                         {providername:"L.GeoManager.BingAerialWithLabels",title:"Bing Гибрид",overlays:[{providername:"L.GeoManager.BingIdentify",title:"Bing"}]},
-                                         {providername:"L.GeoManager.BingAerial",title:"Bing Спутник",overlays:[{providername:"L.GeoManager.BingIdentify",title:"Bing"}]},
-                                         {providername:"L.GeoManager.GoogleSatellite",title:"Wikimapia Google",we: true, overlays:[{providername:"L.GeoManager.WikimapiaOverlay",title:"Wikimapia"},
+                                         {id:"osm",providername:"L.GeoManager.OSM",title:"OpenStreetMap",overlays:[{providername:"L.GeoManager.OSMIdentify", title:"OpenStreetMap"}]},
+                                         {id:"osmTransport",providername:"L.GeoManager.OpenCycleMapTransport",title:"OpenStreetMap Транспорт",overlays:[{providername:"L.GeoManager.OSMIdentify", title:"OpenStreetMap"}]},
+                                         {id:"yandexPublic",providername:"L.GeoManager.YandexPublicMap",title:"Яндекс Народная карта",overlays:[{providername:"L.GeoManager.YandexIdentify", title:"Яндекс"}]},
+                                         {id:"yandexMap",providername:"L.GeoManager.YandexMap",title:"Яндекс Карта",overlays:[{providername:"L.GeoManager.YandexIdentify", title:"Яндекс"}]},
+                                         {id:"yandexSatellite",providername:"L.GeoManager.YandexSatellite",title:"Яндекс Спутник",overlays:[{providername:"L.GeoManager.YandexIdentify", title:"Яндекс"}]},
+                                         {id:"bingMap",providername:"L.GeoManager.BingRoad",title:"Bing",overlays:[{providername:"L.GeoManager.BingIdentify",title:"Bing"}]},
+                                         {id:"bingHybrid",providername:"L.GeoManager.BingAerialWithLabels",title:"Bing Гибрид",overlays:[{providername:"L.GeoManager.BingIdentify",title:"Bing"}]},
+                                         {id:"bingSatellite",providername:"L.GeoManager.BingAerial",title:"Bing Спутник",overlays:[{providername:"L.GeoManager.BingIdentify",title:"Bing"}]},
+                                         {id:"googleSatelliteWikimapia",providername:"L.GeoManager.GoogleSatellite",title:"Wikimapia Google",we: true, overlays:[{providername:"L.GeoManager.WikimapiaOverlay",title:"Wikimapia"},
                                                                                                                          {providername:"L.GeoManager.WikimapiaInteractive",title:"Wikimapia"}]},
-                                         {providername:"L.GeoManager.YandexSatellite",title:"Wikimapia Яндекс",we: true,overlays:[{providername:"L.GeoManager.WikimapiaOverlay",title:"Wikimapia"},
+                                         {id:"yandexSatelliteWikimapia",providername:"L.GeoManager.YandexSatellite",title:"Wikimapia Яндекс",we: true,overlays:[{providername:"L.GeoManager.WikimapiaOverlay",title:"Wikimapia"},
                                                                                                                          {providername:"L.GeoManager.WikimapiaInteractive",title:"Wikimapia"}]},
-                                         {providername:"L.GeoManager.BingAerial",title:"Wikimapia Bing",we: true,overlays:[{providername:"L.GeoManager.WikimapiaOverlay",title:"Wikimapia"},
+                                         {id:"bingSatelliteWikimapia",providername:"L.GeoManager.BingAerial",title:"Wikimapia Bing",we: true,overlays:[{providername:"L.GeoManager.WikimapiaOverlay",title:"Wikimapia"},
                                                                                                                          {providername:"L.GeoManager.WikimapiaInteractive",title:"Wikimapia"}]}
                                         ],
                                   overlayL:[{providername:"L.GeoManager.WikimapiaOverlay",title:"Добавить слой Wikimapia",overlays:[{providername:"L.GeoManager.WikimapiaInteractive",title:"Wikimapia"}]}]
                                   , menu: true
+                                  ,activeSet:"googleRoadmap"
                                  }));

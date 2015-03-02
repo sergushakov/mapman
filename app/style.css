@@ -153,3 +153,9 @@ input[type=checkbox] {
     position: fixed !important;
     bottom:10px;
 }
+
+/* remove google copyright */
+
+.pac-container {
+    background-image: none !important;
+}
